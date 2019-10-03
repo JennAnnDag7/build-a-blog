@@ -18,35 +18,42 @@ class Blogpost(db.Model):
         self.title = title
         self.body = body
 
-@app.route('/', methods=['POST', 'GET'])
+
+
+@app.route('/') 
 def index():
     return redirect('/blog')
 
 
 @app.route('/blog', methods=['POST', 'GET'])
 def blog():
-    blogposts = Blogpost.query.all()
-    return render_template('blog.html', title="Build a Blog", blogposts=blogposts)
+    entry_id = request.args.get('id')
+    if entry_id == None:
+        posts = Blogpost.query.all()
+        return render_template('blog.html', posts=posts, title='Build-a-blog')
+    else:
+        posts = Blogpost.query.get(entry_id)
+        return render_template('newpage.html', posts=posts, title='Blog Entry')
 
-   
-
+ 
 
 @app.route('/newpost', methods=['POST', 'GET'])
 def newpost():
     if request.method == 'POST':
-        blogpost_title = request.form['title']
-        blogpost_body = request.form['body']
-        new_blogpost = Blogpost(blogpost_title, blogpost_body)
-        if blogpost_title == "" and blogpost_body == "":
+        newpost_title = request.form['title']
+        newpost_body = request.form['body']
+        
+        if newpost_title == "" and newpost_body == "":
             return render_template('newpost.html', title_error = 'Please fill in the title.', 
             body_error = 'Please fill in the body.')
-        if blogpost_title == "":
+        if newpost_title == "":
             return render_template('newpost.html', title_error = 'Please fill in the title.')
-        if blogpost_body == "":
+        if newpost_body == "":
             return render_template('newpost.html', body_error = 'Please fill in the body.')
-        db.session.add(new_blogpost)
+        newpost = Blogpost(newpost_title, newpost_body)
+        db.session.add(newpost)
         db.session.commit()
-        return redirect('/blog')
+        return redirect('/blog?id={}'.format(newpost.id))
     return render_template('newpost.html')
 
 
